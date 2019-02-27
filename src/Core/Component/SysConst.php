@@ -11,11 +11,6 @@ namespace EasySwoole\Core\Component;
 
 class SysConst
 {
-
-
-    const DIR_TEMP = 'DIR_TEMP';
-    const DIR_LOG = 'DIR_LOG';
-
     const VERSION = 'VERSION';
 
     const LOGGER_WRITER = 'LOGGER_WRITER';
@@ -30,5 +25,5 @@ class SysConst
     const HTTP_SESSION_SAVE_PATH = 'HTTP_SESSION_SAVE_PATH';
     const HTTP_SESSION_NAME = 'HTTP_SESSION_NAME';
     const HTTP_SESSION_GC_PROBABILITY = 'HTTP_SESSION_GC_PROBABILITY';
-    const HTT_SESSION_GC_MAX_LIFE_TIME = 'HTT_SESSION_GC_MAX_LIFE_TIME';
+    const HTTP_SESSION_GC_MAX_LIFE_TIME = 'HTTP_SESSION_GC_MAX_LIFE_TIME';
 }

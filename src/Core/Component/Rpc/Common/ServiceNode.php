@@ -2,40 +2,38 @@
 /**
  * Created by PhpStorm.
  * User: yf
- * Date: 2018/1/21
- * Time: 下午3:22
+ * Date: 2018/4/30
+ * Time: 下午1:47
  */
 
-namespace EasySwoole\Core\Component\Rpc\Server;
-
-
-use EasySwoole\Core\Component\Cluster\Config;
+namespace EasySwoole\Core\Component\Rpc\Common;
+use EasySwoole\Core\Component\Cluster\Cluster;
 use EasySwoole\Core\Component\Spl\SplBean;
+
 
 class ServiceNode extends SplBean
 {
-    protected $serverId;
+    protected $serverNodeId;//服务（器）节点id
     protected $serviceName;
     protected $address = '127.0.0.1';
     protected $port;
     protected $lastHeartBeat;
-    protected $encrypt = false;
-    protected $token = null;
+    protected $encryptToken = null;
 
     /**
      * @return mixed
      */
-    public function getServerId()
+    public function getServerNodeId()
     {
-        return $this->serverId;
+        return $this->serverNodeId;
     }
 
     /**
-     * @param mixed $serverId
+     * @param mixed $serverNodeId
      */
-    public function setServerId($serverId)
+    public function setServerNodeId($serverNodeId)
     {
-        $this->serverId = $serverId;
+        $this->serverNodeId = $serverNodeId;
     }
 
     /**
@@ -103,45 +101,26 @@ class ServiceNode extends SplBean
     }
 
     /**
-     * @return string
-     */
-    public function getEncrypt(): string
-    {
-        return $this->encrypt;
-    }
-
-    /**
-     * @param string $encrypt
-     */
-    public function setEncrypt(string $encrypt): void
-    {
-        $this->encrypt = $encrypt;
-    }
-
-    /**
      * @return null
      */
-    public function getToken()
+    public function getEncryptToken()
     {
-        return $this->token;
+        return $this->encryptToken;
     }
 
     /**
-     * @param null $token
+     * @param null $encryptToken
      */
-    public function setToken($token): void
+    public function setEncryptToken($encryptToken): void
     {
-        $this->token = $token;
+        $this->encryptToken = $encryptToken;
     }
+
 
     protected function initialize(): void
     {
-        if(empty($this->serverId)){
-            $this->serverId = Config::getInstance()->getServerId();
-            //在swoole table 中以string存储
-            if($this->encrypt == 'false'){
-                $this->encrypt = false;
-            }
+        if(empty($this->serverNodeId)){
+            $this->serverNodeId = Cluster::getInstance()->currentNode()->getNodeId();
         }
     }
 }

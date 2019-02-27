@@ -7,6 +7,7 @@
  */
 
 return [
+    'SERVER_NAME'=>"EasySwoole",
     'MAIN_SERVER'=>[
         'HOST'=>'0.0.0.0',
         'PORT'=>9501,
@@ -21,8 +22,8 @@ return [
         ],
     ],
     'DEBUG'=>true,
-    'TEMP_DIR'=>EASYSWOOLE_ROOT.'/Temp',
-    'LOG_DIR'=>EASYSWOOLE_ROOT.'/Log',
+    'TEMP_DIR'=>null,//若不配置，则默认框架初始化
+    'LOG_DIR'=>null,//若不配置，则默认框架初始化
     'EASY_CACHE'=>[
         'PROCESS_NUM'=>1,//若不希望开启，则设置为0
         'PERSISTENT_TIME'=>0//如果需要定时数据落地，请设置对应的时间周期，单位为秒
@@ -32,10 +33,10 @@ return [
         'token'=>null,
         'broadcastAddress'=>['255.255.255.255:9556'],
         'listenAddress'=>'0.0.0.0',
-        'listenPort'=>9556,
+        'listenPort'=>'9556',
         'broadcastTTL'=>5,
-        'serviceTTL'=>10,
-        'serverName'=>'easySwoole',
-        'serverId'=>null
+        'nodeTimeout'=>10,
+        'nodeName'=>'easySwoole',
+        'nodeId'=>null
     ]
 ];

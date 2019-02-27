@@ -24,7 +24,7 @@ class Request  extends ServerRequest
     {
         $this->request = $request;
         $this->initHeaders();
-        $protocol = str_replace('HTTP/', '', $request->server['server_protocol']) ;
+        $protocol = str_replace('HTTP/', '', $request->server['server_protocol']);
         //为单元测试准备
         if($request->fd){
             $body = new Stream($request->rawContent());
@@ -40,7 +40,7 @@ class Request  extends ServerRequest
 
     function getRequestParam(...$key)
     {
-        $data = array_merge($this->getParsedBody(),$this->getQueryParams());;
+        $data = array_merge($this->getParsedBody(),$this->getQueryParams());
         if(empty($key)){
             return $data;
         }else{
@@ -95,19 +95,33 @@ class Request  extends ServerRequest
     {
         if(isset($this->request->files)){
             $normalized = array();
-            foreach ($this->request->files as $key => $value) {
-                $normalized[$key] = new UploadFile(
-                    $value['tmp_name'],
-                    (int) $value['size'],
-                    (int) $value['error'],
-                    $value['name'],
-                    $value['type']
-                );
+            foreach($this->request->files as $key => $value){
+                if(is_array($value) && !isset($value['tmp_name'])){
+                    $normalized[$key] = [];
+                    foreach($value as $file){
+                        $normalized[$key][] = $this->initFile($file);
+                    }
+                    continue;
+                }
+
+                $normalized[$key] =  $this->initFile($value);
             }
             return $normalized;
         }else{
             return array();
         }
+    }
+
+
+    private function initFile($file)
+    {
+        return new UploadFile(
+            $file['tmp_name'],
+            (int) $file['size'],
+            (int) $file['error'],
+            $file['name'],
+            $file['type']
+        );
     }
 
     private function initCookie()

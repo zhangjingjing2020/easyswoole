@@ -23,11 +23,11 @@ class CacheProcess extends AbstractProcess
 {
     private $cacheData = null;
     private $persistentTime = 0;
-    function __construct(string $processName, bool $async = true, array $args)
+    function __construct(string $processName, array $args)
     {
         $this->cacheData = new SplArray();
         $this->persistentTime = Config::getInstance()->getConf('EASY_CACHE.PERSISTENT_TIME');
-        parent::__construct($processName, $async, $args);
+        parent::__construct($processName, $args);
     }
 
     public function run(Process $process)
@@ -141,14 +141,14 @@ class CacheProcess extends AbstractProcess
     private function saveData()
     {
         $processName = $this->getProcessName();
-        $file = Di::getInstance()->get(SysConst::DIR_TEMP)."/{$processName}.data";
+        $file = Config::getInstance()->getConf('TEMP_DIR')."/{$processName}.data";
         file_put_contents($file,\swoole_serialize::pack($this->cacheData->getArrayCopy()),LOCK_EX);
     }
 
     private function loadData()
     {
         $processName = $this->getProcessName();
-        $file = Di::getInstance()->get(SysConst::DIR_TEMP)."/{$processName}.data";
+        $file = Config::getInstance()->getConf('TEMP_DIR')."/{$processName}.data";
         if(file_exists($file)){
             $data = \swoole_serialize::unpack(file_get_contents($file));
             if(!is_array($data)){

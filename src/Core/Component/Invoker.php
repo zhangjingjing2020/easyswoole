@@ -43,8 +43,22 @@ class Invoker
 
     public static function callUserFunc(callable $callable,...$params)
     {
-        if(ServerManager::getInstance()->isCoroutine()){
-            return Coroutine::call_user_func($callable,...$params);
+        if(SWOOLE_VERSION >1){
+            if($callable instanceof \Closure){
+                return $callable(...$params);
+            }else if(is_array($callable) && is_object($callable[0])){
+                $class = $callable[0];
+                $method = $callable[1];
+                return $class->$method(...$params);
+            }else if(is_array($callable) && is_string($callable[0])){
+                $class = $callable[0];
+                $method = $callable[1];
+                return $class::$method(...$params);
+            }else if(is_string($callable)){
+                return $callable(...$params);
+            }else{
+                return null;
+            }
         }else{
             return call_user_func($callable,...$params);
         }
@@ -52,8 +66,22 @@ class Invoker
 
     public static function callUserFuncArray(callable $callable,array $params)
     {
-        if(ServerManager::getInstance()->isCoroutine()){
-            return Coroutine::call_user_func_array($callable,$params);
+        if(SWOOLE_VERSION > 1){
+            if($callable instanceof \Closure){
+                return $callable(...$params);
+            }else if(is_array($callable) && is_object($callable[0])){
+                $class = $callable[0];
+                $method = $callable[1];
+                return $class->$method(...$params);
+            }else if(is_array($callable) && is_string($callable[0])){
+                $class = $callable[0];
+                $method = $callable[1];
+                return $class::$method(...$params);
+            }else if(is_string($callable)){
+                return $callable(...$params);
+            }else{
+                return null;
+            }
         }else{
             return call_user_func_array($callable,$params);
         }

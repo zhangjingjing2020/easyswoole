@@ -8,7 +8,6 @@
 
 namespace EasySwoole\Core\Swoole;
 use EasySwoole\Core\Component\Di;
-use EasySwoole\Core\Component\Event;
 use EasySwoole\Core\Component\SuperClosure;
 use EasySwoole\Core\Component\SysConst;
 use EasySwoole\Core\Component\Trigger;
@@ -17,15 +16,25 @@ use EasySwoole\Core\Http\Dispatcher;
 use EasySwoole\Core\Http\Message\Status;
 use EasySwoole\Core\Http\Request;
 use EasySwoole\Core\Http\Response;
-use EasySwoole\Core\Socket\AbstractInterface\ExceptionHandler;
-use EasySwoole\Core\Socket\AbstractInterface\ParserInterface;
 use EasySwoole\Core\Socket\Dispatcher as SocketDispatcher;
 use EasySwoole\Core\Swoole\PipeMessage\Message;
 use EasySwoole\Core\Swoole\Task\AbstractAsyncTask;
 use \EasySwoole\Core\Swoole\PipeMessage\EventRegister as PipeMessageEventRegister;
+use EasySwoole\EasySwooleEvent;
 
 class EventHelper
 {
+
+    public static function register(EventRegister $register,string $event,callable $callback):void
+    {
+        $register->set($event,$callback);
+    }
+
+    public static function registerWithAdd(EventRegister $register,string $event,callable $callback):void
+    {
+        $register->add($event,$callback);
+    }
+
     public static function registerDefaultOnRequest(EventRegister $register,$controllerNameSpace = 'App\\HttpController\\'):void
     {
         $dispatcher = new Dispatcher($controllerNameSpace);
@@ -33,10 +42,9 @@ class EventHelper
             $request_psr = new Request($request);
             $response_psr = new Response($response);
             try{
-                $event = Event::getInstance();
-                $event->hook('onRequest',$request_psr,$response_psr);
+                EasySwooleEvent::onRequest($request_psr,$response_psr);
                 $dispatcher->dispatch($request_psr,$response_psr);
-                $event->hook('afterAction',$request_psr,$response_psr);
+                EasySwooleEvent::afterAction($request_psr,$response_psr);
             }catch (\Throwable $throwable){
                 $handler = Di::getInstance()->get(SysConst::HTTP_EXCEPTION_HANDLER);
                 if($handler instanceof ExceptionHandlerInterface){
@@ -47,7 +55,6 @@ class EventHelper
                 }
             }
             $response_psr->response();
-            $response_psr->end(true);
         });
     }
 
@@ -98,30 +105,30 @@ class EventHelper
         });
     }
 
-    public static function registerDefaultOnReceive(EventRegister $register,ParserInterface $parser,callable $onError = null,ExceptionHandler $exceptionHandler = null):void
+    public static function registerDefaultOnReceive(EventRegister $register,string $parserInterface,callable $onError = null,string $exceptionHandler = null):void
     {
-        $dispatch = new SocketDispatcher($parser);
-        $dispatch->onError($onError);
+        $dispatch = new SocketDispatcher($parserInterface);
+        $dispatch->setErrorHandler($onError);
         $dispatch->setExceptionHandler($exceptionHandler);
         $register->add($register::onReceive,function (\swoole_server $server, int $fd, int $reactor_id, string $data)use($dispatch){
             $dispatch->dispatch($dispatch::TCP,$data,$fd,$reactor_id);
         });
     }
 
-    public static function registerDefaultOnPacket(EventRegister $register,ParserInterface $parser,callable $onError = null,ExceptionHandler $exceptionHandler = null)
+    public static function registerDefaultOnPacket(EventRegister $register,string $parserInterface,callable $onError = null,string $exceptionHandler = null)
     {
-        $dispatch = new SocketDispatcher($parser);
-        $dispatch->onError($onError);
+        $dispatch = new SocketDispatcher($parserInterface);
+        $dispatch->setErrorHandler($onError);
         $dispatch->setExceptionHandler($exceptionHandler);
         $register->set($register::onPacket,function (\swoole_server $server, string $data, array $client_info)use($dispatch){
             $dispatch->dispatch($dispatch::UDP,$data,$client_info);
         });
     }
 
-    public static function registerDefaultOnMessage(EventRegister $register,ParserInterface $parser,callable $onError = null,ExceptionHandler $exceptionHandler = null)
+    public static function registerDefaultOnMessage(EventRegister $register,string $parserInterface,callable $onError = null,string $exceptionHandler = null)
     {
-        $dispatch = new SocketDispatcher($parser);
-        $dispatch->onError($onError);
+        $dispatch = new SocketDispatcher($parserInterface);
+        $dispatch->setErrorHandler($onError);
         $dispatch->setExceptionHandler($exceptionHandler);
         $register->set($register::onMessage,function (\swoole_server $server, \swoole_websocket_frame $frame)use($dispatch){
             $dispatch->dispatch($dispatch::WEB_SOCK,$frame->data,$frame);
@@ -131,7 +138,7 @@ class EventHelper
     public static function registerDefaultOnPipeMessage(EventRegister $register):void
     {
         $register->set($register::onPipeMessage,function (\swoole_server $server,$fromWorkerId,$data){
-            $message = \swoole_serialize::unpack($data);
+            $message = unserialize($data);
             if($message instanceof Message){
                 PipeMessageEventRegister::getInstance()->hook($message->getCommand(),$fromWorkerId,$message->getData());
             }else{
